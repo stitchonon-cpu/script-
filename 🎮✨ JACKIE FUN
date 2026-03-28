@@ -1,0 +1,158 @@
+local player = game.Players.LocalPlayer
+local run = game:GetService("RunService")
+
+local function getChar()
+	return player.Character or player.CharacterAdded:Wait()
+end
+
+-- THEME
+local bg = Color3.fromRGB(20,20,20)
+local red = Color3.fromRGB(255,70,70)
+local yellow = Color3.fromRGB(255,200,0)
+
+-- GUI
+local gui = Instance.new("ScreenGui")
+gui.Parent = player:WaitForChild("PlayerGui")
+
+-- OPEN BUTTON
+local openBtn = Instance.new("TextButton", gui)
+openBtn.Size = UDim2.new(0,130,0,45)
+openBtn.Position = UDim2.new(0,20,0,150)
+openBtn.Text = "OPEN"
+openBtn.BackgroundColor3 = red
+openBtn.TextColor3 = Color3.new(1,1,1)
+openBtn.Visible = false
+Instance.new("UICorner", openBtn)
+
+-- MAIN FRAME
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0,260,0,280)
+frame.Position = UDim2.new(0,20,0,200)
+frame.BackgroundColor3 = bg
+frame.Active = true
+frame.Draggable = true
+Instance.new("UICorner", frame)
+
+-- STROKE (ขอบเรืองแสง)
+local stroke = Instance.new("UIStroke", frame)
+stroke.Color = yellow
+stroke.Thickness = 2
+
+-- TITLE (ย่อ + ไม่บังปุ่ม)
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1,-90,0,40) -- เว้นที่ให้ปุ่มด้านขวา
+title.Position = UDim2.new(0,10,0,0)
+title.Text = "🔥 JACKIE"
+title.TextColor3 = yellow
+title.BackgroundTransparency = 1
+title.TextScaled = true
+title.TextXAlignment = Enum.TextXAlignment.Left
+
+-- CLOSE BUTTON
+local close = Instance.new("TextButton", frame)
+close.Size = UDim2.new(0,35,0,35)
+close.Position = UDim2.new(1,-40,0,5)
+close.Text = "X"
+close.BackgroundColor3 = red
+close.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner", close)
+
+-- DESTROY BUTTON
+local destroy = Instance.new("TextButton", frame)
+destroy.Size = UDim2.new(0,35,0,35)
+destroy.Position = UDim2.new(1,-80,0,5)
+destroy.Text = "-"
+destroy.BackgroundColor3 = Color3.fromRGB(80,80,80)
+destroy.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner", destroy)
+
+-- FUNCTION CREATE BUTTON
+local function makeBtn(y,text)
+	local b = Instance.new("TextButton", frame)
+	b.Size = UDim2.new(1,-20,0,40)
+	b.Position = UDim2.new(0,10,0,y)
+	b.Text = text
+	b.BackgroundColor3 = Color3.fromRGB(35,35,35)
+	b.TextColor3 = yellow
+	Instance.new("UICorner", b)
+
+	local stroke = Instance.new("UIStroke", b)
+	stroke.Color = red
+	stroke.Thickness = 1.5
+
+	return b
+end
+
+-- BUTTONS
+local spinBtn = makeBtn(50,"Spin OFF")
+local jumpBtn = makeBtn(100,"Jump OFF")
+local speedBtn = makeBtn(150,"Speed OFF")
+local randomBtn = makeBtn(200,"🎲 Random")
+
+-- STATES
+local spin, jump, speed = false,false,false
+
+-- SPIN
+spinBtn.MouseButton1Click:Connect(function()
+	spin = not spin
+	spinBtn.Text = spin and "Spin ON" or "Spin OFF"
+end)
+
+-- JUMP
+jumpBtn.MouseButton1Click:Connect(function()
+	jump = not jump
+	jumpBtn.Text = jump and "Jump ON" or "Jump OFF"
+end)
+
+-- SPEED
+speedBtn.MouseButton1Click:Connect(function()
+	local hum = getChar():FindFirstChildOfClass("Humanoid")
+	speed = not speed
+	speedBtn.Text = speed and "Speed ON" or "Speed OFF"
+	hum.WalkSpeed = speed and 50 or 16
+end)
+
+-- RANDOM
+randomBtn.MouseButton1Click:Connect(function()
+	local hum = getChar():FindFirstChildOfClass("Humanoid")
+	local root = getChar():FindFirstChild("HumanoidRootPart")
+
+	local r = math.random(1,3)
+	if r == 1 then root.Velocity = Vector3.new(0,80,0)
+	elseif r == 2 then hum.Jump = true
+	elseif r == 3 then root.CFrame = root.CFrame * CFrame.Angles(0,math.rad(90),0)
+	end
+end)
+
+-- LOOP
+run.RenderStepped:Connect(function()
+	local char = getChar()
+	local hum = char:FindFirstChildOfClass("Humanoid")
+	local root = char:FindFirstChild("HumanoidRootPart")
+	if not hum or not root then return end
+
+	if spin then
+		root.CFrame = root.CFrame * CFrame.Angles(0,math.rad(20),0)
+	end
+
+	if jump then
+		hum.Jump = true
+	end
+end)
+
+-- CLOSE
+close.MouseButton1Click:Connect(function()
+	frame.Visible = false
+	openBtn.Visible = true
+end)
+
+-- OPEN
+openBtn.MouseButton1Click:Connect(function()
+	frame.Visible = true
+	openBtn.Visible = false
+end)
+
+-- DESTROY
+destroy.MouseButton1Click:Connect(function()
+	gui:Destroy()
+end)
