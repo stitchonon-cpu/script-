@@ -1,0 +1,209 @@
+-- 😂 FULL PRO TROLL GUI (ALL-IN-ONE)
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- ===== STATE =====
+local states = {
+    spin = false,
+    jump = false
+}
+
+-- ===== GUI =====
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+
+local Main = Instance.new("Frame", ScreenGui)
+Main.Size = UDim2.new(0, 320, 0, 260)
+Main.Position = UDim2.new(0.1,0,0.3,0)
+Main.BackgroundColor3 = Color3.fromRGB(25,25,25)
+Main.Active = true
+Main.Draggable = true
+Instance.new("UICorner", Main)
+
+local Stroke = Instance.new("UIStroke", Main)
+Stroke.Color = Color3.fromRGB(255,120,0)
+Stroke.Thickness = 2
+
+-- ===== Title =====
+local Title = Instance.new("TextLabel", Main)
+Title.Size = UDim2.new(1,0,0,40)
+Title.Text = "😂 TROLL PRO MENU"
+Title.BackgroundTransparency = 1
+Title.TextColor3 = Color3.fromRGB(255,140,0)
+Title.Font = Enum.Font.GothamBold
+Title.TextScaled = true
+
+-- ===== ปุ่มซ่อน / ปิด =====
+local HideBtn = Instance.new("TextButton", Main)
+HideBtn.Size = UDim2.new(0,30,0,30)
+HideBtn.Position = UDim2.new(1,-70,0,5)
+HideBtn.Text = "-"
+HideBtn.BackgroundColor3 = Color3.fromRGB(80,80,0)
+HideBtn.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner", HideBtn)
+
+local CloseBtn = Instance.new("TextButton", Main)
+CloseBtn.Size = UDim2.new(0,30,0,30)
+CloseBtn.Position = UDim2.new(1,-35,0,5)
+CloseBtn.Text = "X"
+CloseBtn.BackgroundColor3 = Color3.fromRGB(120,0,0)
+CloseBtn.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner", CloseBtn)
+
+-- ===== ปุ่มเปิด GUI =====
+local OpenBtn = Instance.new("TextButton", ScreenGui)
+OpenBtn.Size = UDim2.new(0,60,0,60)
+OpenBtn.Position = UDim2.new(0,10,0,10)
+OpenBtn.Text = "OPEN"
+OpenBtn.BackgroundColor3 = Color3.fromRGB(255,100,0)
+OpenBtn.TextColor3 = Color3.new(1,1,1)
+OpenBtn.Visible = false
+Instance.new("UICorner", OpenBtn)
+
+-- ===== Tabs =====
+local TabFrame = Instance.new("Frame", Main)
+TabFrame.Size = UDim2.new(1,0,0,40)
+TabFrame.Position = UDim2.new(0,0,0,40)
+TabFrame.BackgroundTransparency = 1
+
+local Content = Instance.new("Frame", Main)
+Content.Size = UDim2.new(1,0,1,-80)
+Content.Position = UDim2.new(0,0,0,80)
+Content.BackgroundTransparency = 1
+
+local pages = {}
+
+local function createPage(name)
+    local f = Instance.new("Frame", Content)
+    f.Size = UDim2.new(1,0,1,0)
+    f.Visible = false
+    f.BackgroundTransparency = 1
+    pages[name] = f
+    return f
+end
+
+local function showPage(name)
+    for _,v in pairs(pages) do
+        v.Visible = false
+    end
+    if pages[name] then
+        pages[name].Visible = true
+    end
+end
+
+local function createTab(name, pos)
+    local btn = Instance.new("TextButton", TabFrame)
+    btn.Size = UDim2.new(0,100,1,0)
+    btn.Position = UDim2.new(1, -pos, 0, 0)
+    btn.Text = name
+    btn.BackgroundColor3 = Color3.fromRGB(40,40,40)
+    btn.TextColor3 = Color3.new(1,1,1)
+    Instance.new("UICorner", btn)
+
+    btn.MouseButton1Click:Connect(function()
+        showPage(name)
+    end)
+end
+
+createTab("🌀 Weird",100)
+createTab("💥 Chaos",200)
+createTab("🤣 Fun",300)
+
+-- ===== Pages =====
+local funPage = createPage("🤣 Fun")
+local chaosPage = createPage("💥 Chaos")
+local weirdPage = createPage("🌀 Weird")
+showPage("🤣 Fun")
+
+-- ===== Toggle Button =====
+local function makeToggle(parent, text, y, key, callback)
+    local btn = Instance.new("TextButton", parent)
+    btn.Size = UDim2.new(1,-20,0,40)
+    btn.Position = UDim2.new(0,10,0,y)
+    btn.BackgroundColor3 = Color3.fromRGB(60,60,60)
+    btn.TextColor3 = Color3.new(1,1,1)
+    Instance.new("UICorner", btn)
+
+    states[key] = false
+
+    local function update()
+        btn.Text = text .. ": " .. (states[key] and "ON" or "OFF")
+    end
+    update()
+
+    btn.MouseButton1Click:Connect(function()
+        states[key] = not states[key]
+        update()
+        callback(states[key])
+    end)
+end
+
+-- ===== STOP ALL =====
+local function stopAll()
+    for k,_ in pairs(states) do
+        states[k] = false
+    end
+end
+
+local StopBtn = Instance.new("TextButton", Main)
+StopBtn.Size = UDim2.new(1,-20,0,35)
+StopBtn.Position = UDim2.new(0,10,1,-40)
+StopBtn.Text = "⛔ STOP ALL"
+StopBtn.BackgroundColor3 = Color3.fromRGB(120,0,0)
+StopBtn.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner", StopBtn)
+
+StopBtn.MouseButton1Click:Connect(stopAll)
+
+-- ===== 🤣 FUN =====
+makeToggle(funPage, "Big Head 😂", 0, "big", function(state)
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChild("Head") then
+        char.Head.Size = state and Vector3.new(5,5,5) or Vector3.new(2,1,1)
+    end
+end)
+
+-- ===== 💥 CHAOS =====
+makeToggle(chaosPage, "Spin 🌀", 0, "spin", function()
+    task.spawn(function()
+        while states.spin do
+            local char = LocalPlayer.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                char.HumanoidRootPart.CFrame *= CFrame.Angles(0, math.rad(20), 0)
+            end
+            task.wait()
+        end
+    end)
+end)
+
+makeToggle(chaosPage, "Jump Spam 🐸", 50, "jump", function()
+    task.spawn(function()
+        while states.jump do
+            local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid")
+            if hum then
+                hum:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+            task.wait(0.2)
+        end
+    end)
+end)
+
+-- ===== 🌀 WEIRD =====
+makeToggle(weirdPage, "No Gravity 🌌", 0, "gravity", function(state)
+    workspace.Gravity = state and 0 or 196.2
+end)
+
+-- ===== GUI CONTROLS =====
+HideBtn.MouseButton1Click:Connect(function()
+    Main.Visible = false
+    OpenBtn.Visible = true
+end)
+
+OpenBtn.MouseButton1Click:Connect(function()
+    Main.Visible = true
+    OpenBtn.Visible = false
+end)
+
+CloseBtn.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
