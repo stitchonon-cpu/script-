@@ -1,0 +1,95 @@
+local lighting = game:GetService("Lighting")
+local run = game:GetService("RunService")
+local player = game.Players.LocalPlayer
+
+-- GUI
+local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+
+-- ปุ่มเปิด
+local openBtn = Instance.new("TextButton", gui)
+openBtn.Size = UDim2.new(0,120,0,40)
+openBtn.Position = UDim2.new(0,20,0,150)
+openBtn.Text = "🌗 OPEN"
+openBtn.BackgroundColor3 = Color3.fromRGB(255,200,0)
+openBtn.TextColor3 = Color3.new(0,0,0)
+openBtn.Visible = false
+Instance.new("UICorner", openBtn)
+
+-- FRAME
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0,220,0,180)
+frame.Position = UDim2.new(0,20,0,200)
+frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
+frame.Active = true
+frame.Draggable = true
+Instance.new("UICorner", frame)
+
+-- TITLE
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1,0,0,40)
+title.Text = "🌞🌙 Day & Night"
+title.TextColor3 = Color3.fromRGB(255,200,0)
+title.BackgroundTransparency = 1
+title.TextScaled = true
+
+-- ปิด
+local close = Instance.new("TextButton", frame)
+close.Size = UDim2.new(0,30,0,30)
+close.Position = UDim2.new(1,-35,0,5)
+close.Text = "X"
+close.BackgroundColor3 = Color3.fromRGB(255,80,80)
+close.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner", close)
+
+-- ปุ่ม
+local function makeBtn(y,text)
+	local b = Instance.new("TextButton", frame)
+	b.Size = UDim2.new(1,-20,0,35)
+	b.Position = UDim2.new(0,10,0,y)
+	b.Text = text
+	b.BackgroundColor3 = Color3.fromRGB(40,40,40)
+	b.TextColor3 = Color3.fromRGB(255,200,0)
+	Instance.new("UICorner", b)
+	return b
+end
+
+local dayBtn = makeBtn(50,"☀️ Day")
+local nightBtn = makeBtn(90,"🌙 Night")
+local autoBtn = makeBtn(130,"Auto: OFF")
+
+local auto = false
+
+-- DAY
+dayBtn.MouseButton1Click:Connect(function()
+	lighting.ClockTime = 14
+end)
+
+-- NIGHT
+nightBtn.MouseButton1Click:Connect(function()
+	lighting.ClockTime = 0
+end)
+
+-- AUTO
+autoBtn.MouseButton1Click:Connect(function()
+	auto = not auto
+	autoBtn.Text = auto and "Auto: ON" or "Auto: OFF"
+end)
+
+-- LOOP
+run.RenderStepped:Connect(function()
+	if auto then
+		lighting.ClockTime = (lighting.ClockTime + 0.01) % 24
+	end
+end)
+
+-- ปิด GUI
+close.MouseButton1Click:Connect(function()
+	frame.Visible = false
+	openBtn.Visible = true
+end)
+
+-- เปิด GUI
+openBtn.MouseButton1Click:Connect(function()
+	frame.Visible = true
+	openBtn.Visible = false
+end)
