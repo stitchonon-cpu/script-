@@ -1,0 +1,176 @@
+-- ESP PRO UI (Red-Orange Theme)
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+-- ===== GUI =====
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+
+local Frame = Instance.new("Frame", ScreenGui)
+Frame.Size = UDim2.new(0, 220, 0, 140)
+Frame.Position = UDim2.new(0.1, 0, 0.3, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(25,25,25)
+Frame.Active = true
+Frame.Draggable = true
+
+-- มุมโค้ง
+Instance.new("UICorner", Frame).CornerRadius = UDim.new(0,12)
+
+-- เงา
+local Stroke = Instance.new("UIStroke", Frame)
+Stroke.Color = Color3.fromRGB(255,120,0)
+Stroke.Thickness = 2
+
+-- Gradient สีแดงส้ม
+local Gradient = Instance.new("UIGradient", Frame)
+Gradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255,60,0)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255,140,0))
+}
+Gradient.Rotation = 90
+
+-- ===== Title =====
+local Title = Instance.new("TextLabel", Frame)
+Title.Size = UDim2.new(1,0,0,35)
+Title.Text = "🔥 ESP PRO"
+Title.BackgroundTransparency = 1
+Title.TextColor3 = Color3.new(1,1,1)
+Title.TextScaled = true
+Title.Font = Enum.Font.GothamBold
+
+-- ===== Toggle Button =====
+local ToggleBtn = Instance.new("TextButton", Frame)
+ToggleBtn.Size = UDim2.new(1,-20,0,45)
+ToggleBtn.Position = UDim2.new(0,10,0,50)
+ToggleBtn.Text = "ESP: OFF"
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(40,40,40)
+ToggleBtn.TextColor3 = Color3.new(1,1,1)
+ToggleBtn.Font = Enum.Font.GothamBold
+ToggleBtn.TextScaled = true
+Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0,10)
+
+-- Glow ปุ่ม
+local btnStroke = Instance.new("UIStroke", ToggleBtn)
+btnStroke.Color = Color3.fromRGB(255,100,0)
+btnStroke.Thickness = 1.5
+
+-- ===== Hide Button =====
+local HideBtn = Instance.new("TextButton", Frame)
+HideBtn.Size = UDim2.new(0,35,0,35)
+HideBtn.Position = UDim2.new(1,-40,0,5)
+HideBtn.Text = "X"
+HideBtn.BackgroundColor3 = Color3.fromRGB(60,0,0)
+HideBtn.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner", HideBtn).CornerRadius = UDim.new(1,0)
+
+-- ===== Open Button =====
+local OpenBtn = Instance.new("TextButton", ScreenGui)
+OpenBtn.Size = UDim2.new(0,60,0,60)
+OpenBtn.Position = UDim2.new(0,10,0,10)
+OpenBtn.Text = "ESP"
+OpenBtn.BackgroundColor3 = Color3.fromRGB(255,80,0)
+OpenBtn.TextColor3 = Color3.new(1,1,1)
+OpenBtn.Visible = false
+Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(1,0)
+
+-- ===== ESP =====
+local espEnabled = false
+local espData = {}
+
+local function createESP(player)
+    if player == LocalPlayer then return end
+
+    local function setup(char)
+        if not espEnabled then return end
+        
+        local head = char:FindFirstChild("Head")
+        if not head then return end
+
+        local hl = Instance.new("Highlight", char)
+        hl.FillColor = Color3.fromRGB(255,80,0)
+        hl.FillTransparency = 0.4
+
+        local bill = Instance.new("BillboardGui", head)
+        bill.Size = UDim2.new(0,200,0,50)
+        bill.AlwaysOnTop = true
+        bill.StudsOffset = Vector3.new(0,2,0)
+
+        local label = Instance.new("TextLabel", bill)
+        label.Size = UDim2.new(1,0,1,0)
+        label.BackgroundTransparency = 1
+        label.TextColor3 = Color3.fromRGB(255,120,0)
+        label.TextStrokeTransparency = 0
+        label.Font = Enum.Font.GothamBold
+        label.TextScaled = true
+
+        espData[player] = {
+            highlight = hl,
+            gui = bill,
+            label = label
+        }
+    end
+
+    if player.Character then
+        setup(player.Character)
+    end
+    player.CharacterAdded:Connect(setup)
+end
+
+local function enableESP()
+    espEnabled = true
+    for _, p in ipairs(Players:GetPlayers()) do
+        createESP(p)
+    end
+end
+
+local function disableESP()
+    espEnabled = false
+    for _, data in pairs(espData) do
+        if data.highlight then data.highlight:Destroy() end
+        if data.gui then data.gui:Destroy() end
+    end
+    espData = {}
+end
+
+RunService.RenderStepped:Connect(function()
+    if not espEnabled then return end
+    
+    for player, data in pairs(espData) do
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local hrp = player.Character.HumanoidRootPart
+            local myChar = LocalPlayer.Character
+            if myChar and myChar:FindFirstChild("HumanoidRootPart") then
+                local dist = (hrp.Position - myChar.HumanoidRootPart.Position).Magnitude
+                data.label.Text = player.Name .. " [" .. math.floor(dist) .. "m]"
+            end
+        end
+    end
+end)
+
+-- ===== Buttons =====
+ToggleBtn.MouseButton1Click:Connect(function()
+    if espEnabled then
+        disableESP()
+        ToggleBtn.Text = "ESP: OFF"
+    else
+        enableESP()
+        ToggleBtn.Text = "ESP: ON"
+    end
+end)
+
+HideBtn.MouseButton1Click:Connect(function()
+    Frame.Visible = false
+    OpenBtn.Visible = true
+end)
+
+OpenBtn.MouseButton1Click:Connect(function()
+    Frame.Visible = true
+    OpenBtn.Visible = false
+end)
+
+Players.PlayerAdded:Connect(function(p)
+    if espEnabled then
+        createESP(p)
+    end
+end)
