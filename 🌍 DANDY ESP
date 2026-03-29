@@ -1,0 +1,168 @@
+-- 🌍 DANDY ESP (BEAUTIFUL UI + ANIMATED BORDER)
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+-- ===== STATE =====
+local espEnabled = false
+local espData = {}
+
+-- ===== GUI =====
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+
+local Main = Instance.new("Frame", ScreenGui)
+Main.Size = UDim2.new(0, 260, 0, 150)
+Main.Position = UDim2.new(0.1,0,0.3,0)
+Main.BackgroundColor3 = Color3.fromRGB(20,20,20)
+Main.Active = true
+Main.Draggable = true
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0,12)
+
+-- 🌈 Gradient
+local gradient = Instance.new("UIGradient", Main)
+gradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255,60,0)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255,140,0))
+}
+gradient.Rotation = 90
+
+-- ✨ ขอบเรืองแสง
+local stroke = Instance.new("UIStroke", Main)
+stroke.Thickness = 2
+
+-- 🎞 Animation ขอบ (ขยับสี)
+RunService.RenderStepped:Connect(function()
+    local t = tick()
+    stroke.Color = Color3.fromHSV((t % 5)/5, 1, 1)
+end)
+
+-- ===== TITLE =====
+local Title = Instance.new("TextLabel", Main)
+Title.Size = UDim2.new(1,0,0,40)
+Title.Text = "👁 MONSTER ESP"
+Title.BackgroundTransparency = 1
+Title.TextColor3 = Color3.new(1,1,1)
+Title.Font = Enum.Font.GothamBold
+Title.TextScaled = true
+
+-- ===== BUTTON =====
+local Toggle = Instance.new("TextButton", Main)
+Toggle.Size = UDim2.new(1,-20,0,45)
+Toggle.Position = UDim2.new(0,10,0,50)
+Toggle.Text = "ESP: OFF"
+Toggle.BackgroundColor3 = Color3.fromRGB(40,40,40)
+Toggle.TextColor3 = Color3.new(1,1,1)
+Toggle.Font = Enum.Font.GothamBold
+Toggle.TextScaled = true
+Instance.new("UICorner", Toggle)
+
+-- Glow ปุ่ม
+local btnStroke = Instance.new("UIStroke", Toggle)
+btnStroke.Color = Color3.fromRGB(255,100,0)
+
+-- ===== ESP =====
+local function createESP(monster)
+    if not monster:FindFirstChild("HumanoidRootPart") then return end
+
+    local hrp = monster.HumanoidRootPart
+
+    local hl = Instance.new("Highlight", monster)
+    hl.FillColor = Color3.fromRGB(255,0,0)
+    hl.FillTransparency = 0.4
+
+    local bill = Instance.new("BillboardGui", hrp)
+    bill.Size = UDim2.new(0,200,0,50)
+    bill.AlwaysOnTop = true
+    bill.StudsOffset = Vector3.new(0,3,0)
+
+    local label = Instance.new("TextLabel", bill)
+    label.Size = UDim2.new(1,0,1,0)
+    label.BackgroundTransparency = 1
+    label.TextColor3 = Color3.fromRGB(255,120,0)
+    label.TextStrokeTransparency = 0
+    label.TextScaled = true
+    label.Font = Enum.Font.GothamBold
+
+    espData[monster] = {
+        highlight = hl,
+        gui = bill,
+        label = label
+    }
+end
+
+local function enableESP()
+    for _,v in pairs(workspace:GetDescendants()) do
+        if v:IsA("Model") and v:FindFirstChild("Humanoid") and not Players:FindFirstChild(v.Name) then
+            createESP(v)
+        end
+    end
+end
+
+local function disableESP()
+    for _,data in pairs(espData) do
+        if data.highlight then data.highlight:Destroy() end
+        if data.gui then data.gui:Destroy() end
+    end
+    espData = {}
+end
+
+-- ===== UPDATE =====
+RunService.RenderStepped:Connect(function()
+    if not espEnabled then return end
+    
+    local myChar = LocalPlayer.Character
+    if not myChar or not myChar:FindFirstChild("HumanoidRootPart") then return end
+    
+    local myHRP = myChar.HumanoidRootPart
+
+    for monster, data in pairs(espData) do
+        if monster and monster:FindFirstChild("HumanoidRootPart") then
+            local dist = (monster.HumanoidRootPart.Position - myHRP.Position).Magnitude
+            data.label.Text = monster.Name.." ["..math.floor(dist).."m]"
+        end
+    end
+end)
+
+-- ===== TOGGLE =====
+Toggle.MouseButton1Click:Connect(function()
+    espEnabled = not espEnabled
+    Toggle.Text = espEnabled and "ESP: ON" or "ESP: OFF"
+
+    if espEnabled then
+        enableESP()
+    else
+        disableESP()
+    end
+end)
+
+-- ===== GUI CONTROL =====
+local HideBtn = Instance.new("TextButton", Main)
+HideBtn.Size = UDim2.new(0,30,0,30)
+HideBtn.Position = UDim2.new(1,-70,0,5)
+HideBtn.Text = "-"
+
+local CloseBtn = Instance.new("TextButton", Main)
+CloseBtn.Size = UDim2.new(0,30,0,30)
+CloseBtn.Position = UDim2.new(1,-35,0,5)
+CloseBtn.Text = "X"
+
+local OpenBtn = Instance.new("TextButton", ScreenGui)
+OpenBtn.Size = UDim2.new(0,60,0,60)
+OpenBtn.Position = UDim2.new(0,10,0,10)
+OpenBtn.Text = "OPEN"
+OpenBtn.Visible = false
+
+HideBtn.MouseButton1Click:Connect(function()
+    Main.Visible = false
+    OpenBtn.Visible = true
+end)
+
+OpenBtn.MouseButton1Click:Connect(function()
+    Main.Visible = true
+    OpenBtn.Visible = false
+end)
+
+CloseBtn.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
