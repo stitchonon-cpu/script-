@@ -1,0 +1,245 @@
+-- 🏡🔥 BROOKHAVEN ULTIMATE HUB
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+
+-- ===== STATE =====
+local states = {
+    speed=false, jump=false, esp=false, sit=false,
+    carSpeed=false, flycar=false, lockTarget=false
+}
+
+local espData = {}
+local flySpeed = 80
+local targetPlayer = nil
+local flyBV, flyBG
+
+-- ===== GUI =====
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+
+local Main = Instance.new("Frame", ScreenGui)
+Main.Size = UDim2.new(0, 300, 0, 420)
+Main.Position = UDim2.new(0.1,0,0.3,0)
+Main.BackgroundColor3 = Color3.fromRGB(25,25,25)
+Main.Active = true
+Main.Draggable = true
+Instance.new("UICorner", Main)
+
+local Stroke = Instance.new("UIStroke", Main)
+Stroke.Color = Color3.fromRGB(255,120,0)
+
+local Title = Instance.new("TextLabel", Main)
+Title.Size = UDim2.new(1,0,0,40)
+Title.Text = "🔥 ULTIMATE HUB"
+Title.BackgroundTransparency = 1
+Title.TextColor3 = Color3.fromRGB(255,140,0)
+Title.TextScaled = true
+
+-- ===== TOGGLE =====
+local function makeToggle(text,y,key,callback)
+    local b=Instance.new("TextButton",Main)
+    b.Size=UDim2.new(1,-20,0,35)
+    b.Position=UDim2.new(0,10,0,y)
+    b.BackgroundColor3=Color3.fromRGB(50,50,50)
+    b.TextColor3=Color3.new(1,1,1)
+    Instance.new("UICorner",b)
+    local function upd() b.Text=text.." : "..(states[key] and "ON" or "OFF") end
+    upd()
+    b.MouseButton1Click:Connect(function()
+        states[key]=not states[key]; upd(); callback(states[key])
+    end)
+end
+
+-- ===== SPEED =====
+makeToggle("Speed ⚡",50,"speed",function(s)
+    local h=LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid")
+    if h then h.WalkSpeed = s and 40 or 16 end
+end)
+
+-- ===== JUMP =====
+makeToggle("Jump 🦘",90,"jump",function(s)
+    local h=LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid")
+    if h then h.JumpPower = s and 100 or 50 end
+end)
+
+-- ===== SIT =====
+makeToggle("Sit 🪑",130,"sit",function()
+    task.spawn(function()
+        while states.sit do
+            local h=LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid")
+            if h then h.Sit=true end
+            task.wait(0.5)
+        end
+    end)
+end)
+
+-- ===== ESP =====
+local function createESP(p)
+    if p==LocalPlayer then return end
+    local function setup(c)
+        if not states.esp then return end
+        local head=c:FindFirstChild("Head"); if not head then return end
+        local hl=Instance.new("Highlight",c)
+        hl.FillColor=Color3.fromRGB(255,120,0)
+        local bill=Instance.new("BillboardGui",head)
+        bill.Size=UDim2.new(0,200,0,50)
+        bill.AlwaysOnTop=true
+        bill.StudsOffset=Vector3.new(0,2,0)
+        local label=Instance.new("TextLabel",bill)
+        label.Size=UDim2.new(1,0,1,0)
+        label.BackgroundTransparency=1
+        label.TextColor3=Color3.fromRGB(255,120,0)
+        label.TextStrokeTransparency=0
+        label.TextScaled=true
+        espData[p]={hl=hl,gui=bill,label=label}
+    end
+    if p.Character then setup(p.Character) end
+    p.CharacterAdded:Connect(setup)
+end
+
+makeToggle("ESP 👁",170,"esp",function(s)
+    if s then
+        for _,p in pairs(Players:GetPlayers()) do createESP(p) end
+    else
+        for _,v in pairs(espData) do
+            if v.hl then v.hl:Destroy() end
+            if v.gui then v.gui:Destroy() end
+        end
+        espData={}
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if not states.esp then return end
+    local my=LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not my then return end
+    for p,d in pairs(espData) do
+        if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            local dist=(p.Character.HumanoidRootPart.Position-my.Position).Magnitude
+            d.label.Text=p.Name.." ["..math.floor(dist).."m]"
+        end
+    end
+end)
+
+-- ===== CAR SPEED =====
+makeToggle("Car x10 🚗",210,"carSpeed",function()
+    task.spawn(function()
+        while states.carSpeed do
+            local h=LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if h and h.SeatPart and h.SeatPart:IsA("VehicleSeat") then
+                h.SeatPart.MaxSpeed=300
+                h.SeatPart.Torque=999999
+            end
+            task.wait(0.3)
+        end
+    end)
+end)
+
+-- ===== TARGET =====
+local function getNearest()
+    local my=LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not my then return end
+    local c,d=nil,math.huge
+    for _,p in pairs(Players:GetPlayers()) do
+        if p~=LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            local dist=(p.Character.HumanoidRootPart.Position-my.Position).Magnitude
+            if dist<d then d=dist c=p end
+        end
+    end
+    return c
+end
+
+makeToggle("Lock 🎯",250,"lockTarget",function(s)
+    targetPlayer = s and getNearest() or nil
+end)
+
+-- ===== FLY =====
+makeToggle("Fly Car 🚀",290,"flycar",function()
+    task.spawn(function()
+        while states.flycar do
+            local h=LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if h and h.SeatPart and h.SeatPart:IsA("VehicleSeat") then
+                local seat=h.SeatPart
+                if not flyBV then
+                    flyBV=Instance.new("BodyVelocity",seat)
+                    flyBV.MaxForce=Vector3.new(1e9,1e9,1e9)
+                end
+                if not flyBG then
+                    flyBG=Instance.new("BodyGyro",seat)
+                    flyBG.MaxTorque=Vector3.new(1e9,1e9,1e9)
+                end
+
+                if states.lockTarget and targetPlayer and targetPlayer.Character then
+                    local t=targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+                    if t then
+                        flyBV.Velocity=(t.Position-seat.Position).Unit*flySpeed
+                        flyBG.CFrame=CFrame.new(seat.Position,t.Position)
+                        task.wait()
+                        continue
+                    end
+                end
+
+                local cam=workspace.CurrentCamera
+                flyBG.CFrame=cam.CFrame
+                local dir=Vector3.zero
+                if UIS:IsKeyDown(Enum.KeyCode.W) then dir+=cam.CFrame.LookVector end
+                if UIS:IsKeyDown(Enum.KeyCode.S) then dir-=cam.CFrame.LookVector end
+                if UIS:IsKeyDown(Enum.KeyCode.A) then dir-=cam.CFrame.RightVector end
+                if UIS:IsKeyDown(Enum.KeyCode.D) then dir+=cam.CFrame.RightVector end
+                if UIS:IsKeyDown(Enum.KeyCode.Space) then dir+=Vector3.new(0,1,0) end
+                if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then dir-=Vector3.new(0,1,0) end
+                flyBV.Velocity=dir*flySpeed
+            end
+            task.wait()
+        end
+        if flyBV then flyBV:Destroy() flyBV=nil end
+        if flyBG then flyBG:Destroy() flyBG=nil end
+    end)
+end)
+
+-- ===== SPEED CONTROL =====
+local plus=Instance.new("TextButton",Main)
+plus.Size=UDim2.new(0.5,-15,0,30)
+plus.Position=UDim2.new(0,10,0,340)
+plus.Text="Speed +"
+
+local minus=Instance.new("TextButton",Main)
+minus.Size=UDim2.new(0.5,-15,0,30)
+minus.Position=UDim2.new(0.5,5,0,340)
+minus.Text="Speed -"
+
+plus.MouseButton1Click:Connect(function() flySpeed+=20 end)
+minus.MouseButton1Click:Connect(function() flySpeed=math.max(20,flySpeed-20) end)
+
+-- ===== GUI CONTROL =====
+local Hide=Instance.new("TextButton",Main)
+Hide.Size=UDim2.new(0,30,0,30)
+Hide.Position=UDim2.new(1,-70,0,5)
+Hide.Text="-"
+
+local Close=Instance.new("TextButton",Main)
+Close.Size=UDim2.new(0,30,0,30)
+Close.Position=UDim2.new(1,-35,0,5)
+Close.Text="X"
+
+local Open=Instance.new("TextButton",ScreenGui)
+Open.Size=UDim2.new(0,60,0,60)
+Open.Position=UDim2.new(0,10,0,10)
+Open.Text="OPEN"
+Open.Visible=false
+
+Hide.MouseButton1Click:Connect(function()
+    Main.Visible=false
+    Open.Visible=true
+end)
+
+Open.MouseButton1Click:Connect(function()
+    Main.Visible=true
+    Open.Visible=false
+end)
+
+Close.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
